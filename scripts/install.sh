@@ -7,4 +7,6 @@ if [[ "$TOOLS_CACHE_HIT" != "true" ]]; then
   chmod a+rx $TOOLS_PATH/ffmpeg
   chmod a+rx $TOOLS_PATH/ffprobe
 fi
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+chmod a+rx /usr/local/bin/yt-dlp
 
