@@ -33,15 +33,14 @@ jobs:
           python-version: "3.9"
 
       - name: Get pip cache dir
-        id: pip-cache-dir
+        id: pip-cache
         run: |
           echo "::set-output name=dir::$(pip cache dir)"
 
       - name: pip cache
         uses: actions/cache@v3
-        id: pip-cache
         with:
-          path: ${{ steps.pip-cache-dir.outputs.dir }}
+          path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
@@ -57,13 +56,9 @@ jobs:
 
       - name: Install dependency
         run: |
-          if [[ -f requirements.txt ]]; then pip install -r requirements.txt; fi
-          if [[ "$TOOLS_CACHE_HIT" != "true" ]]; then bash scripts/install.sh; fi
-          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-          chmod a+rx /usr/local/bin/yt-dlp
+          bash scripts/install.sh
         env:
           TOOLS_CACHE_HIT: ${{ steps.tools-cache.outputs.cache-hit }}
-          PIP_CACHE_HIT: ${{ steps.pip-cache.outputs.cache-hit }}
       
       - name: Run
         run: |
