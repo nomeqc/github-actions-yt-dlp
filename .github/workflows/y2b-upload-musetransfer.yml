@@ -1,0 +1,62 @@
+name: Download y2b video and upload to musetransfer
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "请输入youtube视频地址："
+        required: true
+      res:
+        description: "优先分辨率："
+        required: true
+        default: "1080p"
+        type: choice
+        options:
+          - 1080p
+          - 720p
+          - 480p
+          - 360p
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: pip cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependency
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          mkdir -p ./bin
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./bin/yt-dlp
+          curl -L https://github.com/Nomeqc/my-release/releases/download/ffmpeg/ffmpeg -o ./bin/ffmpeg
+          curl -L https://github.com/Nomeqc/my-release/releases/download/ffmpeg/ffprobe -o ./bin/ffprobe
+          chmod a+rx ./bin/yt-dlp
+          chmod a+rx ./bin/ffmpeg
+          chmod a+rx ./bin/ffprobe
+          echo "$(cd ./bin; pwd)" >> $GITHUB_PATH
+
+      - name: Run
+        run: |
+          python ./scripts/run.py "${URL}" "${RES}"
+        env:
+          URL: ${{ github.event.inputs.url }}
+          RES: ${{ github.event.inputs.res }}
