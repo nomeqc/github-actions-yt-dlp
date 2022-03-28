@@ -17,6 +17,9 @@ on:
           - 480p
           - 360p
 
+env:
+  TOOLS_PATH: /usr/local/bin/tools
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,30 +33,42 @@ jobs:
           python-version: "3.9"
 
       - name: Get pip cache dir
-        id: pip-cache
+        id: pip-cache-dir
         run: |
           echo "::set-output name=dir::$(pip cache dir)"
 
       - name: pip cache
         uses: actions/cache@v3
+        id: pip-cache
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.pip-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+      
+      - name: tools cache
+        id: tools-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TOOLS_PATH }}
+          key: ${{ runner.os }}-tools-${{ hashFiles('scripts/install.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
 
-      - name: Install dependency
+      - name: pip install
+        if: steps.pip-cache.outputs.cache-hit != 'true'
         run: |
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          mkdir -p ./bin
-          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./bin/yt-dlp
-          curl -L https://github.com/Nomeqc/my-release/releases/download/ffmpeg/ffmpeg -o ./bin/ffmpeg
-          curl -L https://github.com/Nomeqc/my-release/releases/download/ffmpeg/ffprobe -o ./bin/ffprobe
-          chmod a+rx ./bin/yt-dlp
-          chmod a+rx ./bin/ffmpeg
-          chmod a+rx ./bin/ffprobe
-          echo "$(cd ./bin; pwd)" >> $GITHUB_PATH
-
+      
+      - name: Install dependency
+        run: |
+          if [[ "$PIP_CACHE_HIT" != "true" ]] && [[ -f requirements.txt ]]; then pip install -r requirements.txt; fi
+          if [[ "$TOOLS_CACHE_HIT" != "true" ]]; then bash scripts/install.sh; fi
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+        env:
+          TOOLS_CACHE_HIT: ${{ steps.tools-cache.outputs.cache-hit }}
+          PIP_CACHE_HIT: ${{ steps.pip-cache.outputs.cache-hit }}
+      
       - name: Run
         run: |
           python ./scripts/run.py "${URL}" "${RES}"
