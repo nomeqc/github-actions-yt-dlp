@@ -15,7 +15,7 @@ script_dir="$(cd $(dirname "${BASH_SOURCE[0]}") || exit; pwd)"
 echo "$(cd "$TOOLS_PATH" || exit; pwd)" >> $GITHUB_PATH
 
 # 安装python依赖
-if [[ -f $script_dir/requirements.txt ]]; then pip install -r $script_dir/requirements.txt; fi
+if [[ -f requirements.txt ]]; then pip install -r requirements.txt; fi
 
 # 下载ffmpeg
 if [[ "$TOOLS_CACHE_HIT" != "true" ]]; then
