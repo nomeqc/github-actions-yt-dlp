@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from typing import Tuple
 
 from aliyundrive_client import AliyundriveClient, AliyunDriveSessionManager
+from dingtalk import send_dingtalk_message
 
 
 def runcmd(cmd, shell=False):
@@ -76,11 +77,17 @@ def run(url, res, dir, drive_dir):
     res_name = f'{res_name}' if res_name else f'{w}x{h}'
 
     filepath = filepath.rename(Path(dir, f'{filepath.stem}_{res_name}{filepath.suffix}'))
-
-    sessionManager = AliyunDriveSessionManager()
-    client = AliyundriveClient(access_token=sessionManager.access_token)
-    client.upload_file(str(filepath), drive_dir, check_name_mode='overwrite')
-
+    path_in_drive = Path(drive_dir, Path(filepath).name).as_posix()
+    try:
+        sessionManager = AliyunDriveSessionManager()
+        client = AliyundriveClient(access_token=sessionManager.access_token)
+        client.upload_file(str(filepath), drive_dir, check_name_mode='overwrite')
+        message = f'【y2b-upload-aliyundrive】文件已上传到"{path_in_drive}"✔️'
+        send_dingtalk_message(message)
+    except Exception as e:
+        error = f'【y2b-upload-aliyundrive】无法上传文件到"{path_in_drive}"：\n❌{str(e)}'
+        send_dingtalk_message(error)
+    
 
 def parse_inputs():
     parser = argparse.ArgumentParser()

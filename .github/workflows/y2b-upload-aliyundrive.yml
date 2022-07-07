@@ -74,6 +74,7 @@ jobs:
       - name: Run
         run: |
           cp -f ${PRIVATE_REPO}/xmly2aliyundrive/aliyundrive_client.py ${MAIN_REPO}/scripts/aliyundrive_client.py
+          cp -f ${PRIVATE_REPO}/util/dingtalk.py ${MAIN_REPO}/scripts/dingtalk.py
           python ${MAIN_REPO}/scripts/run.py "${URL}" "${RES}" "${DRIVE_DIR}"
         env:
           URL: ${{ github.event.inputs.url }}
