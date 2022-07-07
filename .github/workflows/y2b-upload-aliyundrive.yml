@@ -1,4 +1,4 @@
-name: Download y2b video and upload to musetransfer
+name: Download y2b video and upload to aliyundrive
 
 on:
   workflow_dispatch:
