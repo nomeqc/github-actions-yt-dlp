@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles(format('{0}/requirements.txt', env.MAIN_REPO)) }}
           restore-keys: |
             ${{ runner.os }}-pip-
       
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.TOOLS_PATH }}
-          key: ${{ runner.os }}-tools-${{ hashFiles('scripts/install.sh') }}
+          key: ${{ runner.os }}-tools-${{ hashFiles(format('{0}/scripts/install.sh', env.MAIN_REPO)) }}
           restore-keys: |
             ${{ runner.os }}-tools-
 
