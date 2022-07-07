@@ -1,9 +1,10 @@
 import argparse
 import os
-import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Tuple
+
+from aliyundrive_client import AliyundriveClient, AliyunDriveSessionManager
 
 
 def runcmd(cmd, shell=False):
@@ -47,7 +48,7 @@ def get_video_resolution(video_file: str) -> Tuple[int, int]:
     return tuple([int(item) for item in output.split('x')])
 
 
-def run(url, res, dir):
+def run(url, res, dir, drive_dir):
     output_template = os.path.join(dir, '%(title)s.%(ext)s')
     '''
         下载指定分辨率以内的最好视频，帧率30以上，
@@ -76,17 +77,16 @@ def run(url, res, dir):
 
     filepath = filepath.rename(Path(dir, f'{filepath.stem}_{res_name}{filepath.suffix}'))
 
-    cmd = f'{sys.executable} ./scripts/museuploader.py "{filepath}" -c 6'
-    print(f'执行命令：{cmd}')
-    code = os.system(cmd)
-    if code != 0:
-        raise Exception('出错了！')
+    sessionManager = AliyunDriveSessionManager()
+    client = AliyundriveClient(access_token=sessionManager.access_token)
+    client.upload_file(str(filepath), drive_dir, check_name_mode='overwrite')
 
 
 def parse_inputs():
     parser = argparse.ArgumentParser()
     parser.add_argument('url', help='请输入youtube视频地址')
     parser.add_argument('res', help='请输入分辨率。支持的分辨率有：1080p 720p 480p 360p')
+    parser.add_argument('drive_dir', help='请输入文件上传的目标网盘目录')
     args = parser.parse_args()
     return args
 
@@ -94,10 +94,11 @@ def parse_inputs():
 def main():
     args = parse_inputs()
     url = args.url
+    drive_dir = args.drive_dir
     res_map = {'1080p': '1080', '720p': '720', '480p': '480', '360p': '360'}
     res = res_map.get(args.res, '1080')
     with TemporaryDirectory(prefix='downloads_', dir=os.path.realpath('.')) as tmpdir:
-        run(url, res, tmpdir)
+        run(url, res, tmpdir, drive_dir)
 
 
 if __name__ == '__main__':

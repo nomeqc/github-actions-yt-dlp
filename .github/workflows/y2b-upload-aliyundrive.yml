@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       url:
-        description: "请输入youtube视频地址："
+        description: "youtube视频地址："
         required: true
       res:
-        description: "优先分辨率："
+        description: "分辨率偏好："
         required: true
         default: "1080p"
         type: choice
@@ -16,16 +16,32 @@ on:
           - 720p
           - 480p
           - 360p
+      drive_dir:
+        description: "文件上传的网盘目录："
+        required: true
 
 env:
   TOOLS_PATH: /usr/local/bin/tools
+  MAIN_REPO: main
+  PRIVATE_REPO: private-scripts
   
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.MAIN_REPO }}
+
+      - name: Checkout private scripts
+        uses: actions/checkout@v3
+        with:
+          repository: nomeqc/private-scripts
+          token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
+          path: ${{ env.PRIVATE_REPO }}
+
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
@@ -57,7 +73,9 @@ jobs:
       
       - name: Run
         run: |
-          python ./scripts/run.py "${URL}" "${RES}"
+          cp -f ${PRIVATE_REPO}/xmly2aliyundrive/aliyundrive_client.py ${MAIN_REPO}/scripts/aliyundrive_client.py
+          python ${MAIN_REPO}/scripts/run.py "${URL}" "${RES}" "${DRIVE_DIR}"
         env:
           URL: ${{ github.event.inputs.url }}
           RES: ${{ github.event.inputs.res }}
+          DRIVE_DIR: ${{ github.event.inputs.drive_dir }}
