@@ -67,7 +67,7 @@ jobs:
 
       - name: Install dependency
         run: |
-          bash scripts/install.sh
+          bash ${MAIN_REPO}/scripts/install.sh
         env:
           TOOLS_CACHE_HIT: ${{ steps.tools-cache.outputs.cache-hit }}
       
